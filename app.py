@@ -45,6 +45,43 @@ with st.form("main_form"):
     submit = st.form_submit_button("Analizar Riesgo")
 
 if submit:
+    # ... (dentro del bloque if submit:)
+
+# 1. Crear el DataFrame con TODAS las columnas
+input_df = pd.DataFrame(0, index=[0], columns=all_features)
+
+# 2. Llenar los datos (Asegúrate de que los nombres coincidan con tu CSV)
+mapping = {
+    'Age': age,
+    'Annual_Income': income,
+    'Monthly_Inhand_Salary': monthly,
+    'Num_Bank_Accounts': accounts,
+    'Num_Credit_Card': cards,
+    'Interest_Rate': interest,
+    'Num_of_Loan': loans,
+    'Num_of_Delayed_Payment': delayed,
+    'Num_Credit_Inquiries': changed,
+    'Outstanding_Debt': debt,
+    'Credit_Utilization_Ratio': utilization,
+    'Credit_Mix': {'Bad': 0, 'Standard': 1, 'Good': 2}[mix]
+}
+
+for col, val in mapping.items():
+    if col in input_df.columns:
+        input_df[col] = val
+
+# --- EL TRUCO PARA EL ERROR ESTÁ AQUÍ ---
+# Reordenamos las columnas para que estén en el mismo orden que 'all_features'
+input_df = input_df[all_features] 
+
+# 3. Transformaciones en cadena
+X_scaled = scaler.transform(input_df)
+X_kbest = selector.transform(X_scaled)  # Aquí es donde fallaba, ahora recibirá el orden correcto
+X_pca = pca.transform(X_kbest)
+
+# 4. Predicción
+prediction = model.predict(X_pca)
+# ... el resto del código sigue igual
     # A. Crear DataFrame base con todas las columnas en 0
     input_df = pd.DataFrame(0, index=[0], columns=all_features)
     
