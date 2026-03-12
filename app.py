@@ -48,9 +48,10 @@ with st.form("main_form"):
 # 3. Lógica al presionar el botón
 if submit:
     # A. Crear DataFrame base con TODAS las columnas originales en 0
+    # Usamos all_features para asegurar el orden del entrenamiento
     input_df = pd.DataFrame(0, index=[0], columns=all_features)
     
-    # B. Mapeo de los datos del formulario al DataFrame
+    # B. Mapeo SEGURO de los datos del formulario
     mapping = {
         'Age': age,
         'Annual_Income': income,
@@ -62,23 +63,34 @@ if submit:
         'Num_of_Delayed_Payment': delayed,
         'Num_Credit_Inquiries': changed,
         'Outstanding_Debt': debt,
-        'Credit_Utilization_Ratio': utilization,
-        'Credit_Mix': {'Bad': 0, 'Standard': 1, 'Good': 2}[mix]
+        'Credit_Utilization_Ratio': utilization
     }
     
+    # Llenar datos numéricos básicos si existen en las features del modelo
     for col, val in mapping.items():
         if col in input_df.columns:
             input_df[col] = val
 
-    # C. Reordenar las columnas para que coincidan exactamente con el entrenamiento
-    input_df = input_df[all_features]
+    # C. Manejo especial para Credit_Mix (para evitar el KeyError)
+    # Intentamos mapearlo como número si la columna existe
+    if 'Credit_Mix' in input_df.columns:
+        mix_numeric = {'Bad': 0, 'Standard': 1, 'Good': 2}[mix]
+        input_df['Credit_Mix'] = mix_numeric
+    else:
+        # Si no existe 'Credit_Mix', quizás el modelo usa dummies (ej: Credit_Mix_Standard)
+        col_dummy = f"Credit_Mix_{mix}"
+        if col_dummy in input_df.columns:
+            input_df[col_dummy] = 1
 
     # D. Pipeline de transformación y predicción
     try:
+        # Aseguramos que el orden de columnas sea idéntico al del entrenamiento
+        input_df = input_df[all_features]
+        
         # 1. Escalar datos
         X_scaled = scaler.transform(input_df)
         
-        # 2. SelectKBest (reducir de 19 a 10 columnas)
+        # 2. SelectKBest (reducir a las 10 mejores)
         X_kbest = selector.transform(X_scaled)
         
         # 3. Aplicar PCA
@@ -96,4 +108,4 @@ if submit:
         st.write(f"Confianza del modelo: {prob:.2f}%")
         
     except Exception as e:
-        st.error(f"Ocurrió un error en el procesamiento: {e}")
+        st.error(f"Error técnico: {e}")
