@@ -77,11 +77,22 @@ model = models.Sequential([
 model.compile(optimizer=Adam(learning_rate=0.0003), loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 model.fit(X_train_pca, y_train, epochs=50, batch_size=64, validation_split=0.2, verbose=1)
 
-# --- 6. EXPORTACIÓN ---
-model.save('modelo_credito.h5')
+
+
+import joblib
+import os
+import time
+
+# Borramos el archivo viejo físicamente si existe para forzar uno nuevo
+if os.path.exists('pca.bin'):
+    os.remove('pca.bin')
+
+# Esperamos un segundo y guardamos todo de nuevo
+time.sleep(1)
+joblib.dump(pca, 'pca_v2.bin')
 joblib.dump(scaler, 'scaler.bin')
 joblib.dump(selector, 'selector.bin')
-joblib.dump(pca, 'pca.bin')
 joblib.dump(X.columns.tolist(), 'todas_las_features.bin')
+model.save('modelo_credito.h5')
 
-print("✅ ¡LOGRADO! Archivos generados sin errores.")
+print("✅ Archivos regenerados localmente.")

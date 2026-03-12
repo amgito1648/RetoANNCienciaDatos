@@ -13,7 +13,7 @@ def load_assets():
     model = load_model('modelo_credito.h5')
     scaler = joblib.load('scaler.bin')
     selector = joblib.load('selector.bin')
-    pca = joblib.load('pca.bin')
+    pca = joblib.load('pca_v2.bin')
     features = joblib.load('todas_las_features.bin')
     return model, scaler, selector, pca, features
 
